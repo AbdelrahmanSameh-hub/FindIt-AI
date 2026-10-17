@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindIt AI // نظام ذكي للعثور على المفقودات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --panel-bg: rgba(18, 24, 38, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00e5ff;
+      --accent-blue: #2979ff;
+      --accent-green: #00e676;
+      --accent-amber: #ffab00;
+      --accent-danger: #ff1744;
+      --text-main: #f0f4f8;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Cairo', sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #fff;
+    }
+    .brand-title span { color: var(--accent-cyan); }
+    .badge {
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    input[type="text"], select, textarea {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .color-picker-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .color-swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .btn {
+      background: var(--accent-cyan);
+      color: #07090e;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      filter: brightness(1.15);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+    }
+
+    /* Result Cards */
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .match-item {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border 0.2s;
+    }
+
+    .match-item.top-match {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.15);
+    }
+
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .match-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+
+    .score-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+
+    .score-high { background: rgba(0, 230, 118, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .score-med { background: rgba(255, 171, 0, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+
+    .meta-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+    }
+
+    .meta-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+
+    .breakdown-box {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.76rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .breakdown-box strong { color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+
+    .verify-box {
+      background: rgba(41, 121, 255, 0.08);
+      border: 1px dashed rgba(41, 121, 255, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #b0cfff;
+    }
+
+    .academic-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .academic-box h3 {
+      font-size: 1rem;
+      color: var(--accent-cyan);
+      margin-bottom: 10px;
+    }
+
+    .academic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 768px) {
+      .academic-grid { grid-template-columns: 1fr; }
+    }
+
+    .academic-card {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px;
+      border-radius: 8px;
+      border-top: 2px solid var(--accent-cyan);
+    }
+
+    .academic-card h4 {
+      color: #fff;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 class="brand-title">FindIt <span>AI</span></h1>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">نظام ذكي متعدد النماذج للعثور على المفقودات بالحرم الجامعي</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <span class="badge">Information Retrieval</span>
+        <span class="badge">Computer Vision</span>
+        <span class="badge">Ranking Algorithms</span>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Search Form -->
+      <section class="card">
+        <h2 class="card-title">📝 تسجيل بلاغ مفقودات جديد</h2>
+
+        <div class="form-group">
+          <label>وصف الغرض المفقود:</label>
+          <textarea id="query-text" rows="3" placeholder="مثال: سماعة سوداء بلوتوث أنكر صغيرة داخل علبة الشحن..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>اللون التقريبي (Computer Vision):</label>
+          <div class="color-picker-row">
+            <input type="color" id="query-color" value="#19191c" style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+            <select id="query-pattern" style="flex: 1;">
+              <option value="circle">شكل بيضاوي / دائري (سماعة، ساعة)</option>
+              <option value="rect">شكل مستطيل (محفظة، بطاقة، هاتف)</option>
+              <option value="stripes">شكل طولي / حقيبة (شنطة، مفاتيح)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>المكان التقريبي (Spatial Proximity):</label>
+          <select id="query-location">
+            <option value="Library">المكتبة المركزية</option>
+            <option value="Cafeteria">الكافتيريا والمطعم</option>
+            <option value="Engineering_Hall">مدرجات كلية الهندسة</option>
+            <option value="Bus_Station">موقف حافلات الجامعة</option>
+            <option value="Gym">الصالة الرياضية</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>الوقت التقريبي للفقدان:</label>
+          <select id="query-time">
+            <option value="10">اليوم (خلال الساعات الماضية)</option>
+            <option value="24">أمس (قبل 24 ساعة)</option>
+            <option value="48">قبل يومين إلى ثلاثة أيام</option>
+          </select>
+        </div>
+
+        <button class="btn" id="btn-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          البحث الذكي متعدد النماذج
+        </button>
+
+        <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center;">
+          ⚡ الخوارزميات النشطة: BM25 + Color Histogram + pHash (DCT) + RRF Spatio-Temporal
+        </div>
+      </section>
+
+      <!-- Results Display -->
+      <section class="card">
+        <h2 class="card-title">🔍 نتائج البحث والتطابق المحتمل</h2>
+        <div class="results-list" id="results-container">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Academic Integration Section -->
+    <footer class="academic-box">
+      <h3>🎓 كيف يخدم المشروع المواد الأكاديمية الثلاث؟</h3>
+      <div class="academic-grid">
+        <div class="academic-card">
+          <h4>1. Information Retrieval (IR)</h4>
+          <p>تطبيق خوارزمية <strong>Okapi BM25</strong> لتحليل نصوص بلاغات المفقودات ومطابقتها دلالياً مع معالجة لغوية للكلمات وتطبيع الحروف العربية ومصطلحات البحث.</p>
+        </div>
+        <div class="academic-card">
+          <h4>2. Computer Vision & PR</h4>
+          <p>استخراج مدرج الألوان <strong>Color Histogram</strong> وحساب التشابه، مع خوارزمية <strong>pHash (2D-DCT)</strong> للتعرف على البصمة الهندسية للغرض ومقاومة تغير الإضاءة والتحجيم.</p>
+        </div>
+        <div class="academic-card">
+          <h4>3. Algorithms & Optimization</h4>
+          <p>خوارزمية دمج الرتب التبادلي <strong>Reciprocal Rank Fusion (RRF)</strong> مع نموذج التضاؤل الأسي الزماني والمكاني <strong>Spatio-Temporal Decay</strong> لتوليد ترتيب مثالي للنتائج.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Simulated database items in JavaScript (identical to python dataset)
+    const DATABASE = [
+      {
+        id: 'F-101',
+        title: 'سماعة أذن لاسلكية سوداء مع علبة الشحن',
+        category: 'إلكترونيات',
+        location: 'المكتبة المركزية - الطابق الثاني',
+        locKey: 'Library',
+        hours: 10,
+        text: 'عثر على علبة سماعة بلوتوث صغيرة لونها اسود ماركة انكر بجانب طاولة القراءة',
+        color: [25, 25, 28],
+        pattern: 'circle',
+        verify: 'محفوظة في أمانات المكتبة، يلزم إدخال رمز الاقتران أو الفاتورة للاستلام.'
+      },
+      {
+        id: 'F-102',
+        title: 'محفظة جلدية بنية داكنة',
+        category: 'مقتنيات شخصية',
+        location: 'كافتيريا كلية العلوم',
+        locKey: 'Cafeteria',
+        hours: 14.5,
+        text: 'محفظة رجالية جلد طبيعي بني تحتوي على نقود وبطاقة مواصلات بدون هوية',
+        color: [90, 50, 30],
+        pattern: 'rect',
+        verify: 'يتم التحقق بذكر المبلغ التقريبي أو ماركة المحفظة.'
+      },
+      {
+        id: 'F-103',
+        title: 'حاسبة بيانية كاسيو رمادية فضية',
+        category: 'أدوات دراسية',
+        location: 'مدرج كلية الهندسة 3',
+        locKey: 'Engineering_Hall',
+        hours: 8,
+        text: 'الة حاسبة علمية كاسيو رمادية اللون fx-991 نسيت على احد المقاعد',
+        color: [160, 165, 175],
+        pattern: 'rect',
+        verify: 'يوجد خدش بسيط على غطاء البطارية الخلفي.'
+      },
+      {
+        id: 'F-104',
+        title: 'حقيبة ظهر زرقاء كحلية نايكي',
+        category: 'حقائب',
+        location: 'موقف الحافلات رقم 2',
+        locKey: 'Bus_Station',
+        hours: 16,
+        text: 'شنطة ظهر رياضية كحلية نايكي تحتوي على دفاتر جامعية وزجاجة ماء',
+        color: [15, 35, 95],
+        pattern: 'stripes',
+        verify: 'اسم الطالب مكتوب داخل الدفتر الأول.'
+      },
+      {
+        id: 'F-105',
+        title: 'ميدالية مفاتيح سيارة مع شريط أحمر',
+        category: 'مفاتيح',
+        location: 'مدخل الصالة الرياضية',
+        locKey: 'Gym',
+        hours: 24,
+        text: 'مفتاح سيارة ريموت مع ميدالية قماشية حمراء كتب عليها Remove Before Flight',
+        color: [200, 20, 30],
+        pattern: 'stripes',
+        verify: 'نوع السيارة تويوتا والمفتاح يحتوي على شريحة ذكية.'
+      }
+    ];
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1), 16);
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+    }
+
+    function colorDistance(c1, c2) {
+      const dr = c1[0] - c2[0];
+      const dg = c1[1] - c2[1];
+      const db = c1[2] - c2[2];
+      return Math.sqrt(dr*dr + dg*dg + db*db);
+    }
+
+    function runSearch() {
+      const qText = document.getElementById('query-text').value.toLowerCase();
+      const qColorHex = document.getElementById('query-color').value;
+      const qRgb = hexToRgb(qColorHex);
+      const qPattern = document.getElementById('query-pattern').value;
+      const qLocation = document.getElementById('query-location').value;
+      const qTime = parseFloat(document.getElementById('query-time').value);
+
+      const qWords = qText.split(/[\s,،.]+/).filter(w => w.length > 1);
+
+      // Score each item with multimodal fusion simulation
+      const scored = DATABASE.map(item => {
+        // 1. Text Score (BM25 keyword overlap simulation)
+        let textHits = 0;
+        qWords.forEach(w => {
+          if (item.text.includes(w) || item.title.includes(w)) textHits += 1.5;
+        });
+        const textScore = textHits > 0 ? textHits * 0.4 : 0.05;
+
+        // 2. Color Score (Normalized Euclidean/Intersection proxy)
+        const cDist = colorDistance(qRgb, item.color);
+        const colorScore = Math.max(0, 1.0 - (cDist / 380.0));
+
+        // 3. Shape / Pattern Score
+        const shapeScore = item.pattern === qPattern ? 1.0 : 0.4;
+
+        // 4. Spatial proximity
+        const spaceScore = item.locKey === qLocation ? 1.0 : 0.65;
+
+        // 5. Temporal proximity
+        const dt = Math.abs(qTime - item.hours);
+        const timeScore = Math.pow(2, -dt / 48);
+
+        // RRF Fused Multi-criteria
+        const total = (textScore * 0.4 + colorScore * 0.3 + shapeScore * 0.15) * (0.6 + 0.2 * spaceScore + 0.2 * timeScore);
+        const matchPct = Math.min(98.5, Math.max(12, total * 105));
+
+        return {
+          ...item,
+          matchPct: matchPct.toFixed(1),
+          textRank: textHits > 0 ? "تطابق مرتفع" : "تطابق منخفض",
+          colorPct: (colorScore * 100).toFixed(0),
+          spacePct: (spaceScore * 100).toFixed(0),
+          timePct: (timeScore * 100).toFixed(0)
+        };
+      });
+
+      scored.sort((a, b) => b.matchPct - a.matchPct);
+
+      // Render results
+      const container = document.getElementById('results-container');
+      container.innerHTML = '';
+
+      scored.forEach((res, index) => {
+        const isTop = index === 0 && res.matchPct > 65;
+        const scoreClass = res.matchPct >= 70 ? 'score-high' : 'score-med';
+
+        const itemHtml = `
+          <div class="match-item ${isTop ? 'top-match' : ''}">
+            <div class="match-header">
+              <div class="match-title">
+                ${isTop ? '⭐ ' : ''}${res.title}
+              </div>
+              <span class="score-badge ${scoreClass}">تطابق ${res.matchPct}%</span>
+            </div>
+
+            <div class="meta-tags">
+              <span class="meta-tag">📍 ${res.location}</span>
+              <span class="meta-tag">🏷️ ${res.category}</span>
+              <span class="meta-tag">🆔 ${res.id}</span>
+            </div>
+
+            <p style="font-size: 0.84rem; color: var(--text-main);">${res.text}</p>
+
+            <div class="breakdown-box">
+              <div>النص: <strong>${res.textRank}</strong></div>
+              <div>تطابق اللون: <strong>${res.colorPct}%</strong></div>
+              <div>القرب المكاني: <strong>${res.spacePct}%</strong></div>
+            </div>
+
+            <div class="verify-box">
+              🔒 <strong>التحقق الآمن من الملكية:</strong> ${res.verify}
+            </div>
+          </div>
+        `;
+        container.innerHTML += itemHtml;
+      });
+    }
+
+    document.getElementById('btn-search').addEventListener('click', runSearch);
+
+    // Initial default search
+    document.getElementById('query-text').value = "سماعة سوداء بلوتوث أنكر صغيرة فقدتها أثناء الدراسة";
+    runSearch();
+  </script>
+</body>
+</html>
